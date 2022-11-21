@@ -100,7 +100,7 @@ fn exec_cmd_not_empty(cmd: &str, args: &[&str]) -> Option<String> {
 
 #[allow(unused)]
 fn run() -> std::io::Result<()> {
-    println!("cargo:rerun-if-file-changed=sys/ocaml-sys.c");
+    println!("cargo:rerun-if-file-changed=sys/src/ocaml-sys.c");
     println!("cargo:rerun-if-env-changed=OCAMLOPT");
     println!("cargo:rerun-if-env-changed=OCAML_VERSION");
     println!("cargo:rerun-if-env-changed=OCAML_WHERE_PATH");
@@ -168,7 +168,7 @@ fn run() -> std::io::Result<()> {
     // Build C bindings
     cc::Build::new()
         .static_flag(true)
-        .file("src/ocaml-sys.c")
+        .file("sys/src/ocaml-sys.c")
         .include(&ocaml_path)
         .compile("ocaml-sys");
     println!("cargo:rustc-link-lib=static=ocaml-sys");
