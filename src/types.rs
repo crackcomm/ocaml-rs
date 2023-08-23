@@ -552,10 +552,30 @@ pub(crate) mod bigarray_ext {
             Array2(x, PhantomData)
         }
 
+        /// Create a new OCaml `Bigarray.Array2` with the given type and shape
+        /// in Fortran layout
+        pub unsafe fn create_f(dim: ndarray::Ix2) -> Array2<T> {
+            let data = bigarray::malloc(dim.size() * mem::size_of::<T>());
+            let x = Value::new(bigarray::caml_ba_alloc_dims(
+                T::kind()
+                    | bigarray::Managed::EXTERNAL as i32
+                    | bigarray::Layout::FORTRAN_LAYOUT as i32,
+                2,
+                data as bigarray::Data,
+                dim[0] as sys::Intnat,
+                dim[1] as sys::Intnat,
+            ));
+            Array2(x, PhantomData)
+        }
+
         /// Create Array2 from ndarray
         pub unsafe fn from_ndarray(data: ndarray::Array2<T>) -> Array2<T> {
             let dim = data.raw_dim();
-            let array = Array2::create(dim);
+            let array = if data.is_standard_layout() {
+                Array2::create(dim)
+            } else {
+                Array2::create_f(dim)
+            };
             let ba = { array.0.custom_ptr_val::<bigarray::Bigarray>() };
             {
                 ptr::copy_nonoverlapping(data.as_ptr(), (*ba).data as *mut T, dim.size());
