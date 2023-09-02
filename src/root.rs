@@ -26,7 +26,19 @@ impl Eq for Root {}
 impl Root {
     /// Create a new root
     pub unsafe fn new(v: sys::Value) -> Root {
-        Root(ocaml_boxroot_sys::boxroot_create(v).expect("boxroot_create failed"))
+        Root(match ocaml_boxroot_sys::boxroot_create(v) {
+            Some(root) => root,
+            None => {
+                let status = match ocaml_boxroot_sys::boxroot_status() {
+                    ocaml_boxroot_sys::Status::NotSetup => "NotSetup",
+                    Running => "Running",
+                    ToreDown => "ToreDown",
+                    Invalid => "Invalid",
+                    _ => "Unknown",
+                };
+                panic!("boxroot_create failed, boxroot_status() -> {}", status);
+            }
+        })
     }
 
     /// Get value from root
